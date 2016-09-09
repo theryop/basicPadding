@@ -14,21 +14,29 @@ int main(int argc, char *argv[])
 	int blocksize = 8;
 	if (argc > 1)
 	{
+		counter  = 1;
 		string comptemp = string(argv[counter]);
 		size_t found = comptemp.find("-b");
-		if (comptemp == "-p")
+		while (counter < argc)
 		{
-			padstate = true;
-		}
-		else if (comptemp == "-u")
-		{
-			padstate = false;
-		}
-		else if (found != string::npos)
-		{
-			string bstemp = comptemp.substr(2, comptemp.size() - 1);
-			cout << "block size is now " << bstemp << endl;
-			blocksize = stoi(bstemp, nullptr, 10);
+			comptemp = string(argv[counter]);
+			found = comptemp.find("-b");
+			
+			if (comptemp == "-p")
+			{
+				padstate = true;
+			}
+			else if (comptemp == "-u")
+			{
+				padstate = false;
+			}
+			else if (found != string::npos)
+			{
+				string bstemp = comptemp.substr(2, comptemp.size() - 1);
+				cout << "block size is now " << bstemp << endl;
+				blocksize = atoi(bstemp.c_str());
+			}
+			counter++;
 		}
 
 	}
@@ -39,14 +47,14 @@ int main(int argc, char *argv[])
 	vector<char> usero;
 	while (ui != EOF) // reads inputstream and fills input string with chosen input
 	{
-		if (ui != ' ')
+		useri.push_back(ui);
+		if (ui == ' ')
 		{
-			useri.push_back(ui);
-			ui = getchar();
+			useri.pop_back();
 		}
+		ui = getchar();
 	}
-
-
+	
 	if (padstate)
 	{
 		int outputcounter;
@@ -111,7 +119,7 @@ int main(int argc, char *argv[])
 		} 
 		else
 		{
-			throw invalid_argument("Block size must be non-negative");
+			cerr << "Block size must be non-negative" << endl;
 			exit(1);
 		}
 
@@ -119,7 +127,7 @@ int main(int argc, char *argv[])
 		bool inputfinish = false;
 		while (outputcounter > 0)
 		{
-			if (counter == useri.size())
+			if ((unsigned)counter == useri.size())
 			{
 				inputfinish = true;
 			}
@@ -145,11 +153,10 @@ int main(int argc, char *argv[])
 	{
 		vector<char>padchars;
 		padchars.push_back(useri.at(useri.size() - 2));
-		padchars.push_back(useri.at(useri.size() - 2));
+		padchars.push_back(useri.at(useri.size() - 1));
 		char val = padchars.at(0);
 		char val2 = padchars.at(1);
 		int dec1, dec2, findec;
-		
 		if ((((+val < 58) && (+val > 47)) || ((+val < 103) && (+val > 96))) && (((+val2 < 58) && (+val2 > 47)) || ((+val2 < 103) && (+val2 > 96))))
 			{
 				int num = +val;
@@ -195,10 +202,9 @@ int main(int argc, char *argv[])
 			cout << val << " is not a hexidecimal input, and therefore is not acceptible." << endl;
 			exit(1);
 		}
-
 		int padcheck = 0; //decimal value in findec, character reps in val and val2
 		counter = 0;
-		while (counter < useri.size())
+		while ((unsigned)counter < useri.size())
 		{
 			if (useri.at(counter) == val && useri.at(counter + 1) == val2)
 			{
@@ -208,18 +214,19 @@ int main(int argc, char *argv[])
 		}
 		if (padcheck != findec)
 		{
-			throw invalid_argument("Error: Number of padding bytes does not match coded padding byte.");
+			cerr << "Error: Number of padding bytes does not match coded padding byte." << endl;
 			exit(1);
 		}
 		else
 		{
 			counter = 0;
-			while (counter < useri.size())
+			while ((unsigned)counter < useri.size())
 			{
-				if (useri.at(counter) != val && useri.at(counter + 1) != val2)
+				if (useri.at(counter) != val || useri.at(counter + 1) != val2)
 				{
 					usero.push_back(useri.at(counter));
 					usero.push_back(useri.at(counter + 1));
+					usero.push_back(' ');
 				}
 				counter += 2;
 			}
@@ -231,6 +238,5 @@ int main(int argc, char *argv[])
 	{
 		putchar(usero.at(counter));
 		counter++;
-
 	}
 }

@@ -1,0 +1,236 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+	bool padstate = true; // true for pad, false for unpad
+	int counter = 0;
+	int blocksize = 8;
+	if (argc > 1)
+	{
+		string comptemp = string(argv[counter]);
+		size_t found = comptemp.find("-b");
+		if (comptemp == "-p")
+		{
+			padstate = true;
+		}
+		else if (comptemp == "-u")
+		{
+			padstate = false;
+		}
+		else if (found != string::npos)
+		{
+			string bstemp = comptemp.substr(2, comptemp.size() - 1);
+			cout << "block size is now " << bstemp << endl;
+			blocksize = stoi(bstemp, nullptr, 10);
+		}
+
+	}
+
+	int ui = getchar();
+	counter = 0;
+	vector<char> useri;
+	vector<char> usero;
+	while (ui != EOF) // reads inputstream and fills input string with chosen input
+	{
+		if (ui != ' ')
+		{
+			useri.push_back(ui);
+			ui = getchar();
+		}
+	}
+
+
+	if (padstate)
+	{
+		int outputcounter;
+		int padremain;
+		if ((useri.size() / 2) % blocksize != 0) //checks to see byte size, and calculates necessary padding 
+		{
+			int tempsize = useri.size();
+			outputcounter = (2 * blocksize) * ((tempsize / (2 * blocksize)) + 1); 
+			padremain = blocksize - ((tempsize / 2) % blocksize);
+		}
+		else
+		{
+			outputcounter = (useri.size() / 2) / blocksize;
+		}
+
+		vector<char> padchars;
+		if (padremain < 10 && blocksize > 0)
+		{
+			padchars.push_back('0');
+			padchars.push_back(padremain + '0');
+		}
+		else if (padremain > 0)
+		{
+			int valtemp = padremain;
+			int remain = valtemp % 16;
+			valtemp = valtemp - remain;
+			valtemp = valtemp / 16;
+			if (valtemp > 9)
+			{
+				switch (valtemp)
+				{
+				case 10: padchars.push_back('a'); break;
+				case 11: padchars.push_back('b'); break;
+				case 12: padchars.push_back('c'); break;
+				case 13: padchars.push_back('d'); break;
+				case 14: padchars.push_back('e'); break;
+				case 15: padchars.push_back('f'); break;
+				}
+			}
+			else
+			{
+				char conv = valtemp + '0';
+				padchars.push_back(conv);
+			}
+			if (remain > 9)
+			{
+				switch (remain)
+				{
+				case 10: padchars.push_back('a'); break;
+				case 11: padchars.push_back('b'); break;
+				case 12: padchars.push_back('c'); break;
+				case 13: padchars.push_back('d'); break;
+				case 14: padchars.push_back('e'); break;
+				case 15: padchars.push_back('f'); break;
+				}
+			}
+			else
+			{
+				char conv2 = remain + '0';
+				padchars.push_back(conv2);
+			}
+		} 
+		else
+		{
+			throw invalid_argument("Block size must be non-negative");
+			exit(1);
+		}
+
+		counter = 0;
+		bool inputfinish = false;
+		while (outputcounter > 0)
+		{
+			if (counter == useri.size())
+			{
+				inputfinish = true;
+			}
+			if (inputfinish)
+			{
+				usero.push_back(padchars.at(0));
+				usero.push_back(padchars.at(1));
+				usero.push_back(' ');
+			}
+			else
+			{
+				usero.push_back(useri.at(counter));
+				usero.push_back(useri.at(counter + 1));
+				usero.push_back(' ');
+			}
+			counter += 2;
+			outputcounter-=2;
+		}
+
+
+	}
+	else 
+	{
+		vector<char>padchars;
+		padchars.push_back(useri.at(useri.size() - 2));
+		padchars.push_back(useri.at(useri.size() - 2));
+		char val = padchars.at(0);
+		char val2 = padchars.at(1);
+		int dec1, dec2, findec;
+		
+		if ((((+val < 58) && (+val > 47)) || ((+val < 103) && (+val > 96))) && (((+val2 < 58) && (+val2 > 47)) || ((+val2 < 103) && (+val2 > 96))))
+			{
+				int num = +val;
+				int num2 = +val2;
+				if (+val > 58)
+				{
+					switch (num)
+					{
+					case 97: dec1 = 160; break;
+					case 98: dec1 = 176; break;
+					case 99: dec1 = 192; break;
+					case 100: dec1 = 208; break;
+					case 101: dec1 = 224; break;
+					case 102: dec1 = 240; break;
+					}
+				}
+				else
+				{
+					num = val - '0';
+					dec1 = num * 16;
+				}
+				if (+val2 > 58)
+				{
+					switch (num2)
+					{
+					case 97: dec2 = 10; break;
+					case 98: dec2 = 11; break;
+					case 99: dec2 = 12; break;
+					case 100: dec2 = 13; break;
+					case 101: dec2 = 14; break;
+					case 102: dec2 = 15; break;
+					}
+				}
+				else
+				{
+					num2 = val2 - '0';
+					dec2 = num2;
+				}
+				findec = dec1 + dec2;
+			}
+		else
+		{
+			cout << val << " is not a hexidecimal input, and therefore is not acceptible." << endl;
+			exit(1);
+		}
+
+		int padcheck = 0; //decimal value in findec, character reps in val and val2
+		counter = 0;
+		while (counter < useri.size())
+		{
+			if (useri.at(counter) == val && useri.at(counter + 1) == val2)
+			{
+				padcheck++;
+			}
+			counter += 2;
+		}
+		if (padcheck != findec)
+		{
+			throw invalid_argument("Error: Number of padding bytes does not match coded padding byte.");
+			exit(1);
+		}
+		else
+		{
+			counter = 0;
+			while (counter < useri.size())
+			{
+				if (useri.at(counter) != val && useri.at(counter + 1) != val2)
+				{
+					usero.push_back(useri.at(counter));
+					usero.push_back(useri.at(counter + 1));
+				}
+				counter += 2;
+			}
+		}
+	}
+
+	counter = 0;
+	while ((unsigned)counter < usero.size())
+	{
+		putchar(usero.at(counter));
+		counter++;
+
+	}
+}
